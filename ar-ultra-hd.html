@@ -1,196 +1,70 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR Flujograma HD</title>
+    <title>AR Test Simple</title>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
-        * {
+        body {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
         
-        body {
-            font-family: Arial, sans-serif;
+        #viewer {
+            width: 100vw;
+            height: 70vh;
             background: #f0f0f0;
         }
         
-        model-viewer {
-            width: 100vw;
-            height: 100vh;
-            --poster-color: transparent;
-        }
-        
-        .instructions {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.85);
+        #boton-ar {
+            display: block;
+            width: 80%;
+            margin: 20px auto;
+            padding: 25px;
+            background: red;
             color: white;
-            padding: 15px 25px;
+            border: 5px solid black;
             border-radius: 15px;
-            z-index: 1000;
+            font-size: 24px;
+            font-weight: bold;
             text-align: center;
-            max-width: 85%;
-            font-size: 14px;
-            backdrop-filter: blur(10px);
-        }
-        
-        .quality-badge {
-            position: fixed;
-            top: 70px;
-            right: 20px;
-            background: rgba(76, 175, 80, 0.95);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: bold;
-            z-index: 1000;
-        }
-        
-        #ar-button {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 18px 45px;
-            border-radius: 50px;
-            font-size: 18px;
-            font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 8px 30px rgba(102,126,234,0.5);
-            z-index: 1001;
-            transition: all 0.3s;
         }
         
-        #ar-button:active {
-            transform: translateX(-50%) scale(0.95);
-        }
-        
-        .tips {
-            position: fixed;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 152, 0, 0.95);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 15px;
-            font-size: 12px;
-            max-width: 85%;
+        #info {
+            padding: 20px;
+            background: yellow;
+            color: black;
+            font-size: 16px;
             text-align: center;
-            z-index: 999;
         }
     </style>
 </head>
 <body>
-    <div class="instructions">
-        📱 Para mejor calidad:<br>
-        <small>• Usa buena iluminación<br>
-        • Acércate al modelo en AR</small>
+    <div id="info">
+        ¿Ves este texto amarillo y el botón rojo abajo?
     </div>
     
-    <div class="quality-badge">
-        ✨ Ultra HD
-    </div>
-    
-    <div class="tips">
-        💡 El texto se verá más nítido cuando estés más cerca
-    </div>
-    
-    <model-viewer
-        id="model"
+    <model-viewer 
+        id="viewer"
         src="3_2_12_Mantenimiento_de_aviacion.glb"
-        
         ar
-        ar-modes="webxr scene-viewer quick-look"
-        ar-scale="fixed"
-        
+        ar-modes="quick-look"
         camera-controls
-        touch-action="pan-y"
-        disable-zoom
-        
-        alt="Flujograma de Mantenimiento de Aviación"
-        
-        exposure="2.5"
-        shadow-intensity="0"
-        shadow-softness="0"
-        
-        environment-image="neutral"
-        skybox-image="neutral"
-        
-        tone-mapping="commerce"
-        
-        interaction-prompt="none"
-        
-        loading="eager"
-        reveal="auto"
-        
-        max-camera-orbit="auto auto 100%"
-        min-camera-orbit="auto auto 50%"
-        
-        style="--poster-color: transparent; --progress-bar-color: #667eea;">
-        
-        <button slot="ar-button" id="ar-button">
-            🚀 Ver en Realidad Aumentada
-        </button>
-        
-        <div slot="progress-bar" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); color: white; padding: 25px 40px; border-radius: 15px; font-size: 16px; z-index: 2000;">
-            Cargando modelo HD...<br>
-            <small style="opacity: 0.8;">Por favor espera</small>
-        </div>
+        alt="Flujograma">
     </model-viewer>
     
+    <button id="boton-ar">
+        🚀 TOCA AQUÍ PARA AR
+    </button>
+    
     <script>
-        const modelViewer = document.querySelector('#model');
-        const tips = document.querySelector('.tips');
+        const viewer = document.getElementById('viewer');
+        const boton = document.getElementById('boton-ar');
         
-        // Ocultar tips después de 8 segundos
-        setTimeout(() => {
-            tips.style.opacity = '0';
-            tips.style.transition = 'opacity 0.5s';
-            setTimeout(() => tips.style.display = 'none', 500);
-        }, 8000);
-        
-        modelViewer.addEventListener('load', () => {
-            console.log('✅ Modelo cargado en alta calidad');
-        });
-        
-        modelViewer.addEventListener('ar-status', (event) => {
-            if (event.detail.status === 'session-started') {
-                console.log('🚀 Sesión AR iniciada');
-                document.querySelector('.instructions').innerHTML = 
-                    '👆 Toca una superficie para colocar el flujograma';
-            }
-            
-            if (event.detail.status === 'object-placed') {
-                console.log('✅ Modelo colocado en AR');
-                document.querySelector('.instructions').innerHTML = 
-                    '✨ Acércate para ver mejor los detalles';
-            }
-            
-            if (event.detail.status === 'failed') {
-                console.error('❌ Error en AR:', event.detail);
-                alert('No se pudo iniciar AR. Verifica los permisos de cámara.');
-            }
-        });
-        
-        // Forzar calidad máxima cuando carga
-        modelViewer.addEventListener('load', () => {
-            // Acceder al material y forzar configuración
-            const model = modelViewer.model;
-            if (model) {
-                model.materials.forEach(material => {
-                    material.setDoubleSided(true);
-                });
-            }
+        boton.addEventListener('click', () => {
+            viewer.activateAR();
         });
     </script>
 </body>

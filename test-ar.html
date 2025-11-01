@@ -2,46 +2,157 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test AR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>AR Flujograma iOS</title>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
-</head>
-<body style="margin:0">
-    <model-viewer 
-        src="3_2_12_Mantenimiento_de_aviacion.glb"
-        ar
-        ar-modes="scene-viewer webxr quick-look"
-        camera-controls
-        style="width:100vw; height:100vh;"
-        alt="Test">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
         
-        <button slot="ar-button" style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); padding:15px 30px; font-size:16px; background:#667eea; color:white; border:none; border-radius:30px;">
-            AR
+        model-viewer {
+            width: 100vw;
+            height: 100vh;
+            background-color: #f5f5f5;
+        }
+        
+        .ar-button {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            border-radius: 28px;
+            font-size: 17px;
+            font-weight: 600;
+            box-shadow: 0 4px 20px rgba(0,122,255,0.4);
+            z-index: 999;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .ar-button:active {
+            transform: translateX(-50%) scale(0.95);
+        }
+        
+        .instructions {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            z-index: 998;
+            text-align: center;
+            max-width: 85%;
+        }
+        
+        #debug {
+            position: fixed;
+            top: 80px;
+            left: 10px;
+            right: 10px;
+            background: rgba(255,0,0,0.9);
+            color: white;
+            padding: 10px;
+            font-size: 12px;
+            border-radius: 8px;
+            z-index: 9999;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="instructions">
+        📱 Toca "Ver en AR" para comenzar
+    </div>
+    
+    <div id="debug">Iniciando...</div>
+    
+    <model-viewer 
+        id="viewer"
+        src="3_2_12_Mantenimiento_de_aviacion.glb"
+        
+        ar
+        ar-modes="quick-look"
+        
+        ios-src="3_2_12_Mantenimiento_de_aviacion.glb"
+        
+        camera-controls
+        touch-action="pan-y"
+        
+        alt="Flujograma de Mantenimiento"
+        
+        exposure="1.5"
+        shadow-intensity="0"
+        
+        autoplay
+        
+        style="width:100%; height:100%;">
+        
+        <button slot="ar-button" class="ar-button">
+            🚀 Ver en AR
         </button>
     </model-viewer>
     
-    <div id="status" style="position:fixed; top:10px; left:10px; background:black; color:white; padding:10px; font-size:12px; z-index:9999;">
-        Iniciando...
-    </div>
-    
     <script>
-        const mv = document.querySelector('model-viewer');
-        const status = document.getElementById('status');
+        const viewer = document.getElementById('viewer');
+        const debug = document.getElementById('debug');
+        let logs = [];
         
-        mv.addEventListener('load', () => {
-            status.textContent = '✅ Modelo cargado!';
-            status.style.background = 'green';
+        function log(msg) {
+            console.log(msg);
+            logs.push(msg);
+            debug.innerHTML = logs.slice(-10).join('<br>');
+        }
+        
+        log('Página cargada');
+        log('Navegador: ' + navigator.userAgent);
+        
+        viewer.addEventListener('load', () => {
+            log('✅ Modelo cargado correctamente');
+            setTimeout(() => {
+                if (document.querySelector('button[slot="ar-button"]')) {
+                    log('✅ Botón AR encontrado');
+                } else {
+                    log('❌ Botón AR NO encontrado');
+                }
+            }, 1000);
         });
         
-        mv.addEventListener('error', (e) => {
-            status.textContent = '❌ Error: ' + e.detail.type;
-            status.style.background = 'red';
+        viewer.addEventListener('error', (e) => {
+            log('❌ Error: ' + JSON.stringify(e.detail));
         });
         
-        mv.addEventListener('progress', (e) => {
+        viewer.addEventListener('ar-status', (e) => {
+            log('AR Status: ' + e.detail.status);
+        });
+        
+        viewer.addEventListener('progress', (e) => {
             const percent = (e.detail.totalProgress * 100).toFixed(0);
-            status.textContent = `Cargando: ${percent}%`;
+            log('Progreso: ' + percent + '%');
         });
+        
+        // Verificar soporte AR
+        if (viewer.canActivateAR) {
+            log('✅ AR soportado en este dispositivo');
+        } else {
+            log('❌ AR NO soportado');
+        }
+        
+        // Ocultar debug después de 15 segundos
+        setTimeout(() => {
+            debug.style.display = 'none';
+        }, 15000);
     </script>
 </body>
 </html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Flujograma - Máxima Calidad</title>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        model-viewer {
+            width: 100vw;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        
+        .instructions {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            z-index: 1000;
+            text-align: center;
+            max-width: 80%;
+        }
+        
+        .ar-button {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(102,126,234,0.4);
+            z-index: 1000;
+        }
+        
+        .quality-badge {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="instructions">
+        📱 Toca el botón para colocar el flujograma en tu espacio<br>
+        <small style="opacity: 0.8;">Alta definición desde SVG</small>
+    </div>
+    
+    <div class="quality-badge">
+        ✨ Ultra HD
+    </div>
+    
+    <model-viewer
+        src="flujograma_ultra_hq.glb"
+        ar
+        ar-modes="webxr scene-viewer quick-look"
+        camera-controls
+        touch-action="pan-y"
+        alt="Flujograma de Mantenimiento de Aviación"
+        shadow-intensity="1"
+        ar-scale="auto"
+        loading="eager"
+        reveal="auto">
+        
+        <button slot="ar-button" class="ar-button">
+            ✨ Ver en Realidad Aumentada
+        </button>
+        
+        <div slot="progress-bar" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 20px 30px; border-radius: 10px; font-size: 16px;">
+            Cargando modelo HD...
+        </div>
+    </model-viewer>
+    
+    <script>
+        const modelViewer = document.querySelector('model-viewer');
+        
+        modelViewer.addEventListener('load', () => {
+            console.log('Modelo Ultra HD cargado correctamente');
+        });
+        
+        modelViewer.addEventListener('ar-status', (event) => {
+            if (event.detail.status === 'session-started') {
+                console.log('Sesión AR iniciada - Ultra HD');
+            }
+        });
+    </script>
+</body>
+</html>

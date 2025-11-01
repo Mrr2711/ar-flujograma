@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flujograma AR - Mantenimiento de Aviación</title>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+            transition: opacity 0.5s;
+        }
+        
+        #loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-top: 5px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 25px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .loading-subtext {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        #instructions-panel {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 18px 30px;
+            border-radius: 15px;
+            z-index: 1000;
+            text-align: center;
+            max-width: 85%;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        #instructions-panel h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            color: #4CAF50;
+        }
+        
+        #instructions-panel p {
+            margin: 5px 0;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .status-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(244, 67, 54, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        
+        .status-indicator.active {
+            background: rgba(76, 175, 80, 0.9);
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: white;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .control-panel {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+        
+        .btn {
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            padding: 14px 24px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(76, 175, 80, 0.95);
+            color: white;
+            padding: 25px 40px;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 2000;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            display: none;
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+        
+        .notification.show {
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
+            #instructions-panel {
+                top: 10px;
+                padding: 12px 20px;
+            }
+            
+            #instructions-panel h3 {
+                font-size: 14px;
+            }
+            
+            #instructions-panel p {
+                font-size: 11px;
+            }
+            
+            .control-panel {
+                bottom: 20px;
+            }
+            
+            .btn {
+                padding: 10px 16px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Overlay de carga -->
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Iniciando Realidad Aumentada</div>
+        <div class="loading-subtext">Preparando cámara...</div>
+    </div>
+    
+    <!-- Panel de instrucciones -->
+    <div id="instructions-panel">
+        <h3>📱 Cómo usar la AR</h3>
+        <p><strong>1.</strong> Imprime el marcador Hiro (descarga más abajo)</p>
+        <p><strong>2.</strong> Apunta tu cámara al marcador</p>
+        <p><strong>3.</strong> El flujograma aparecerá flotando sobre el marcador</p>
+    </div>
+    
+    <!-- Indicador de estado -->
+    <div class="status-indicator" id="status">
+        <div class="status-dot"></div>
+        <span id="status-text">Buscando marcador...</span>
+    </div>
+    
+    <!-- Notificación -->
+    <div class="notification" id="notification">
+        ✓ ¡Flujograma detectado!
+    </div>
+    
+    <!-- Escena A-Frame AR -->
+    <a-scene
+        vr-mode-ui="enabled: false"
+        renderer="logarithmicDepthBuffer: true; precision: medium;"
+        embedded
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+        
+        <!-- Assets -->
+        <a-assets>
+            <img id="flujograma-img" src="3_2_12_Mantenimiento_de_aviacion.png" crossorigin="anonymous">
+        </a-assets>
+        
+        <!-- Marcador Hiro -->
+        <a-marker preset="hiro" id="marker" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+            
+            <!-- Panel de fondo -->
+            <a-plane 
+                position="0 0 -0.02" 
+                width="3" 
+                height="2.2" 
+                rotation="-90 0 0"
+                color="#ffffff"
+                opacity="0.98"
+                shadow="cast: false; receive: true">
+            </a-plane>
+            
+            <!-- Imagen del flujograma -->
+            <a-image 
+                src="#flujograma-img"
+                position="0 0 0.01"
+                width="2.8"
+                height="2"
+                rotation="-90 0 0"
+                opacity="1"
+                animation__scale="property: scale; from: 0.1 0.1 0.1; to: 1 1 1; dur: 800; easing: easeOutElastic; startEvents: markerFound"
+                animation__rotate="property: rotation; from: -90 0 180; to: -90 0 0; dur: 800; easing: easeOutQuad; startEvents: markerFound">
+            </a-image>
+            
+            <!-- Marco decorativo -->
+            <a-ring
+                position="0 0 0.005"
+                radius-inner="2"
+                radius-outer="2.05"
+                rotation="-90 0 0"
+                color="#2196F3"
+                opacity="0.9">
+            </a-ring>
+            
+            <!-- Título flotante -->
+            <a-text 
+                value="FLUJOGRAMA DE MANTENIMIENTO DE AVIACIÓN"
+                position="0 1.3 0.1"
+                rotation="-90 0 0"
+                width="4"
+                align="center"
+                color="#1565C0"
+                font="mozillavr"
+                animation__float="property: position; from: 0 1.3 0.1; to: 0 1.35 0.1; dir: alternate; dur: 2000; loop: true; easing: easeInOutSine">
+            </a-text>
+            
+            <!-- Esquinas decorativas -->
+            <a-box position="-1.5 1.15 0.03" width="0.08" height="0.05" depth="0.3" rotation="-90 0 0" color="#FF5722"></a-box>
+            <a-box position="1.5 1.15 0.03" width="0.08" height="0.05" depth="0.3" rotation="-90 0 0" color="#FF5722"></a-box>
+            <a-box position="-1.5 -1.15 0.03" width="0.08" height="0.05" depth="0.3" rotation="-90 0 0" color="#FF5722"></a-box>
+            <a-box position="1.5 -1.15 0.03" width="0.08" height="0.05" depth="0.3" rotation="-90 0 0" color="#FF5722"></a-box>
+            
+            <!-- Esferas en las esquinas con animación -->
+            <a-sphere position="-1.5 1.15 0.15" radius="0.06" color="#4CAF50"
+                animation="property: position; from: -1.5 1.15 0.15; to: -1.5 1.15 0.25; dir: alternate; dur: 1500; loop: true; easing: easeInOutSine"></a-sphere>
+            <a-sphere position="1.5 1.15 0.15" radius="0.06" color="#4CAF50"
+                animation="property: position; from: 1.5 1.15 0.15; to: 1.5 1.15 0.25; dir: alternate; dur: 1500; loop: true; easing: easeInOutSine; delay: 375"></a-sphere>
+            <a-sphere position="-1.5 -1.15 0.15" radius="0.06" color="#4CAF50"
+                animation="property: position; from: -1.5 -1.15 0.15; to: -1.5 -1.15 0.25; dir: alternate; dur: 1500; loop: true; easing: easeInOutSine; delay: 750"></a-sphere>
+            <a-sphere position="1.5 -1.15 0.15" radius="0.06" color="#4CAF50"
+                animation="property: position; from: 1.5 -1.15 0.15; to: 1.5 -1.15 0.25; dir: alternate; dur: 1500; loop: true; easing: easeInOutSine; delay: 1125"></a-sphere>
+        </a-marker>
+        
+        <!-- Cámara -->
+        <a-entity camera></a-entity>
+    </a-scene>
+    
+    <!-- Panel de control -->
+    <div class="control-panel">
+        <button class="btn" onclick="toggleInstructions()">
+            <span>ℹ️</span>
+            <span>Ayuda</span>
+        </button>
+        <button class="btn" onclick="downloadMarker()">
+            <span>📥</span>
+            <span>Descargar Marcador</span>
+        </button>
+    </div>
+    
+    <script>
+        // Variables globales
+        let instructionsVisible = true;
+        let markerDetected = false;
+        
+        // Inicialización cuando la página carga
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                document.getElementById('loading-overlay').classList.add('hidden');
+            }, 2000);
+        });
+        
+        // Detectar eventos del marcador
+        const marker = document.querySelector('#marker');
+        
+        marker.addEventListener('markerFound', function() {
+            console.log('Marcador encontrado');
+            markerDetected = true;
+            
+            // Actualizar estado
+            const status = document.getElementById('status');
+            const statusText = document.getElementById('status-text');
+            status.classList.add('active');
+            statusText.textContent = '✓ Marcador detectado';
+            
+            // Mostrar notificación
+            const notification = document.getElementById('notification');
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 2500);
+            
+            // Ocultar instrucciones automáticamente
+            setTimeout(() => {
+                if (instructionsVisible) {
+                    toggleInstructions();
+                }
+            }, 3000);
+        });
+        
+        marker.addEventListener('markerLost', function() {
+            console.log('Marcador perdido');
+            markerDetected = false;
+            
+            // Actualizar estado
+            const status = document.getElementById('status');
+            const statusText = document.getElementById('status-text');
+            status.classList.remove('active');
+            statusText.textContent = 'Buscando marcador...';
+        });
+        
+        // Función para alternar instrucciones
+        function toggleInstructions() {
+            const panel = document.getElementById('instructions-panel');
+            instructionsVisible = !instructionsVisible;
+            
+            if (instructionsVisible) {
+                panel.style.display = 'block';
+                panel.style.animation = 'slideIn 0.3s ease';
+            } else {
+                panel.style.opacity = '0';
+                setTimeout(() => {
+                    panel.style.display = 'none';
+                    panel.style.opacity = '1';
+                }, 300);
+            }
+        }
+        
+        // Función para descargar el marcador Hiro
+        function downloadMarker() {
+            window.open('https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png', '_blank');
+        }
+        
+        // Auto-ocultar instrucciones después de 15 segundos si no se ha detectado el marcador
+        setTimeout(() => {
+            if (!markerDetected && instructionsVisible) {
+                const panel = document.getElementById('instructions-panel');
+                panel.style.transition = 'opacity 0.5s';
+                panel.style.opacity = '0.7';
+            }
+        }, 15000);
+    </script>
+</body>
+</html>

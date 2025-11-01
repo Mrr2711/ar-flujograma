@@ -2,8 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>AR Flujograma - Máxima Calidad</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Flujograma HD</title>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -13,30 +14,13 @@
         
         body {
             font-family: Arial, sans-serif;
-            overflow: hidden;
-            background: #000;
+            background: #f0f0f0;
         }
         
-        #container {
+        model-viewer {
             width: 100vw;
             height: 100vh;
-            position: relative;
-        }
-        
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
-        
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1000;
+            --poster-color: transparent;
         }
         
         .instructions {
@@ -46,293 +30,168 @@
             transform: translateX(-50%);
             background: rgba(0,0,0,0.85);
             color: white;
-            padding: 15px 30px;
+            padding: 15px 25px;
             border-radius: 15px;
+            z-index: 1000;
             text-align: center;
-            max-width: 90%;
+            max-width: 85%;
             font-size: 14px;
             backdrop-filter: blur(10px);
-            pointer-events: auto;
         }
         
-        .ar-button {
+        .quality-badge {
             position: fixed;
-            bottom: 40px;
+            top: 70px;
+            right: 20px;
+            background: rgba(76, 175, 80, 0.95);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            z-index: 1000;
+        }
+        
+        #ar-button {
+            position: fixed;
+            bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 20px 50px;
+            padding: 18px 45px;
             border-radius: 50px;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 10px 40px rgba(102,126,234,0.6);
+            box-shadow: 0 8px 30px rgba(102,126,234,0.5);
             z-index: 1001;
-            pointer-events: auto;
             transition: all 0.3s;
         }
         
-        .ar-button:active {
+        #ar-button:active {
             transform: translateX(-50%) scale(0.95);
         }
         
-        .loading {
+        .tips {
             position: fixed;
-            top: 50%;
+            bottom: 100px;
             left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.9);
+            transform: translateX(-50%);
+            background: rgba(255, 152, 0, 0.95);
             color: white;
-            padding: 30px 50px;
+            padding: 12px 20px;
             border-radius: 15px;
-            font-size: 18px;
-            z-index: 2000;
-        }
-        
-        .quality-info {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            background: rgba(76, 175, 80, 0.9);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
             font-size: 12px;
-            font-weight: bold;
+            max-width: 85%;
+            text-align: center;
+            z-index: 999;
         }
     </style>
 </head>
 <body>
-    <div id="container"></div>
-    
-    <div class="overlay">
-        <div class="instructions">
-            📱 Mueve tu dispositivo para encontrar una superficie<br>
-            <small>Toca donde quieras colocar el flujograma</small>
-        </div>
-        
-        <div class="quality-info">
-            ✨ Calidad Ultra HD
-        </div>
+    <div class="instructions">
+        📱 Para mejor calidad:<br>
+        <small>• Usa buena iluminación<br>
+        • Acércate al modelo en AR</small>
     </div>
     
-    <button class="ar-button" id="arButton">
-        🚀 Activar Realidad Aumentada
-    </button>
-    
-    <div class="loading" id="loading" style="display: none;">
-        Cargando modelo de alta calidad...<br>
-        <small>Por favor espera</small>
+    <div class="quality-badge">
+        ✨ Ultra HD
     </div>
     
-    <!-- WebXR Polyfill -->
-    <script src="https://cdn.jsdelivr.net/npm/webxr-polyfill@latest/build/webxr-polyfill.js"></script>
+    <div class="tips">
+        💡 El texto se verá más nítido cuando estés más cerca
+    </div>
     
-    <!-- THREE.js -->
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-        }
-    }
-    </script>
+    <model-viewer
+        id="model"
+        src="flujograma_ultra_hq.glb"
+        
+        ar
+        ar-modes="webxr scene-viewer quick-look"
+        ar-scale="fixed"
+        
+        camera-controls
+        touch-action="pan-y"
+        disable-zoom
+        
+        alt="Flujograma de Mantenimiento de Aviación"
+        
+        exposure="2.5"
+        shadow-intensity="0"
+        shadow-softness="0"
+        
+        environment-image="neutral"
+        skybox-image="neutral"
+        
+        tone-mapping="commerce"
+        
+        interaction-prompt="none"
+        
+        loading="eager"
+        reveal="auto"
+        
+        max-camera-orbit="auto auto 100%"
+        min-camera-orbit="auto auto 50%"
+        
+        style="--poster-color: transparent; --progress-bar-color: #667eea;">
+        
+        <button slot="ar-button" id="ar-button">
+            🚀 Ver en Realidad Aumentada
+        </button>
+        
+        <div slot="progress-bar" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); color: white; padding: 25px 40px; border-radius: 15px; font-size: 16px; z-index: 2000;">
+            Cargando modelo HD...<br>
+            <small style="opacity: 0.8;">Por favor espera</small>
+        </div>
+    </model-viewer>
     
-    <script type="module">
-        import * as THREE from 'three';
-        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    <script>
+        const modelViewer = document.querySelector('#model');
+        const tips = document.querySelector('.tips');
         
-        let scene, camera, renderer, model;
-        let xrSession = null;
-        let xrRefSpace = null;
-        let hitTestSource = null;
-        let hitTestSourceRequested = false;
-        let reticle = null;
+        // Ocultar tips después de 8 segundos
+        setTimeout(() => {
+            tips.style.opacity = '0';
+            tips.style.transition = 'opacity 0.5s';
+            setTimeout(() => tips.style.display = 'none', 500);
+        }, 8000);
         
-        const container = document.getElementById('container');
-        const arButton = document.getElementById('arButton');
-        const loading = document.getElementById('loading');
+        modelViewer.addEventListener('load', () => {
+            console.log('✅ Modelo cargado en alta calidad');
+        });
         
-        // Inicializar escena
-        function init() {
-            // Escena
-            scene = new THREE.Scene();
-            
-            // Cámara
-            camera = new THREE.PerspectiveCamera(
-                70,
-                window.innerWidth / window.innerHeight,
-                0.01,
-                20
-            );
-            
-            // Renderer con máxima calidad
-            renderer = new THREE.WebGLRenderer({ 
-                antialias: true,
-                alpha: true,
-                powerPreference: "high-performance"
-            });
-            renderer.setPixelRatio(window.devicePixelRatio * 1.5); // ⬆️ Aumentar calidad
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.xr.enabled = true;
-            renderer.outputColorSpace = THREE.SRGBColorSpace;
-            renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.5;
-            container.appendChild(renderer.domElement);
-            
-            // Luz ambiente fuerte
-            const ambientLight = new THREE.AmbientLight(0xffffff, 2.0); // ⬆️ Muy brillante
-            scene.add(ambientLight);
-            
-            // Luz direccional
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 2.0);
-            directionalLight.position.set(0, 5, 5);
-            scene.add(directionalLight);
-            
-            // Luz adicional frontal
-            const frontLight = new THREE.DirectionalLight(0xffffff, 1.5);
-            frontLight.position.set(0, 0, 5);
-            scene.add(frontLight);
-            
-            // Retículo para placement
-            const geometry = new THREE.RingGeometry(0.15, 0.2, 32).rotateX(-Math.PI / 2);
-            const material = new THREE.MeshBasicMaterial({ color: 0x4CAF50 });
-            reticle = new THREE.Mesh(geometry, material);
-            reticle.matrixAutoUpdate = false;
-            reticle.visible = false;
-            scene.add(reticle);
-            
-            // Cargar modelo con máxima calidad de textura
-            loading.style.display = 'block';
-            const loader = new GLTFLoader();
-            loader.load(
-                'flujograma_ultra_hq.glb', // Cambia por tu archivo
-                function(gltf) {
-                    model = gltf.scene;
-                    
-                    // CRÍTICO: Forzar máxima calidad de textura
-                    model.traverse((child) => {
-                        if (child.isMesh) {
-                            // Desactivar mipmaps para máxima nitidez
-                            if (child.material.map) {
-                                child.material.map.minFilter = THREE.LinearFilter;
-                                child.material.map.magFilter = THREE.LinearFilter;
-                                child.material.map.anisotropy = renderer.capabilities.getMaxAnisotropy();
-                                child.material.map.needsUpdate = true;
-                            }
-                            
-                            // Mejorar material
-                            child.material.side = THREE.DoubleSide; // Visible ambos lados
-                            child.material.needsUpdate = true;
-                        }
-                    });
-                    
-                    model.visible = false;
-                    scene.add(model);
-                    loading.style.display = 'none';
-                    console.log('Modelo cargado con máxima calidad');
-                },
-                function(xhr) {
-                    console.log((xhr.loaded / xhr.total * 100) + '% cargado');
-                },
-                function(error) {
-                    console.error('Error cargando modelo:', error);
-                    loading.innerHTML = '❌ Error cargando modelo';
-                }
-            );
-            
-            // Controles para preview (no AR)
-            const controls = new OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            camera.position.set(0, 1.6, 3);
-            
-            // Resize
-            window.addEventListener('resize', onWindowResize);
-        }
-        
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-        
-        // Activar AR
-        arButton.addEventListener('click', async () => {
-            if (!navigator.xr) {
-                alert('WebXR no disponible en este dispositivo');
-                return;
+        modelViewer.addEventListener('ar-status', (event) => {
+            if (event.detail.status === 'session-started') {
+                console.log('🚀 Sesión AR iniciada');
+                document.querySelector('.instructions').innerHTML = 
+                    '👆 Toca una superficie para colocar el flujograma';
             }
             
-            const sessionInit = {
-                requiredFeatures: ['hit-test'],
-                optionalFeatures: ['dom-overlay'],
-                domOverlay: { root: document.body }
-            };
+            if (event.detail.status === 'object-placed') {
+                console.log('✅ Modelo colocado en AR');
+                document.querySelector('.instructions').innerHTML = 
+                    '✨ Acércate para ver mejor los detalles';
+            }
             
-            try {
-                xrSession = await navigator.xr.requestSession('immersive-ar', sessionInit);
-                await onSessionStarted(xrSession);
-            } catch (e) {
-                console.error('Error iniciando AR:', e);
-                alert('No se pudo iniciar AR. Asegúrate de dar permisos de cámara.');
+            if (event.detail.status === 'failed') {
+                console.error('❌ Error en AR:', event.detail);
+                alert('No se pudo iniciar AR. Verifica los permisos de cámara.');
             }
         });
         
-        async function onSessionStarted(session) {
-            session.addEventListener('end', onSessionEnded);
-            renderer.xr.setSession(session);
-            arButton.textContent = '👆 Toca para colocar';
-            
-            xrRefSpace = await session.requestReferenceSpace('local-floor');
-            
-            session.requestHitTestSource({ space: xrRefSpace }).then((source) => {
-                hitTestSource = source;
-            });
-            
-            session.addEventListener('select', onSelect);
-            renderer.setAnimationLoop(render);
-        }
-        
-        function onSelect() {
-            if (reticle.visible && model) {
-                model.position.setFromMatrixPosition(reticle.matrix);
-                model.visible = true;
+        // Forzar calidad máxima cuando carga
+        modelViewer.addEventListener('load', () => {
+            // Acceder al material y forzar configuración
+            const model = modelViewer.model;
+            if (model) {
+                model.materials.forEach(material => {
+                    material.setDoubleSided(true);
+                });
             }
-        }
-        
-        function onSessionEnded() {
-            xrSession = null;
-            hitTestSource = null;
-            hitTestSourceRequested = false;
-            arButton.textContent = '🚀 Activar Realidad Aumentada';
-            if (model) model.visible = false;
-        }
-        
-        function render(timestamp, frame) {
-            if (frame) {
-                const referenceSpace = renderer.xr.getReferenceSpace();
-                
-                if (hitTestSource) {
-                    const hitTestResults = frame.getHitTestResults(hitTestSource);
-                    if (hitTestResults.length) {
-                        const hit = hitTestResults[0];
-                        reticle.visible = true;
-                        reticle.matrix.fromArray(hit.getPose(referenceSpace).transform.matrix);
-                    } else {
-                        reticle.visible = false;
-                    }
-                }
-            }
-            
-            renderer.render(scene, camera);
-        }
-        
-        // Iniciar
-        init();
-        renderer.setAnimationLoop(render);
+        });
     </script>
 </body>
 </html>

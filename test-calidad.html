@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Calidad</title>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+        
+        .section {
+            background: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .test-container {
+            width: 100%;
+            height: 400px;
+            border: 2px solid #ddd;
+            overflow: auto;
+            position: relative;
+        }
+        
+        #imagen-svg {
+            width: 100%;
+            height: auto;
+        }
+        
+        model-viewer {
+            width: 100%;
+            height: 400px;
+            background: #e0e0e0;
+        }
+        
+        .info {
+            background: #fffbea;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        
+        .zoom-controls {
+            margin: 10px 0;
+        }
+        
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        button:active {
+            background: #1976D2;
+        }
+        
+        #stats {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Diagnóstico de Calidad</h1>
+    
+    <div id="stats">
+        <strong>Información del Modelo:</strong><br>
+        Cargando...
+    </div>
+    
+    <div class="section">
+        <h2>1️⃣ SVG Original</h2>
+        <div class="info">
+            ✅ Esta es la calidad MÁXIMA de tu fuente original.<br>
+            Haz zoom con pellizco para ver los detalles.
+        </div>
+        <div class="zoom-controls">
+            <button onclick="zoomSVG(1.5)">Zoom +</button>
+            <button onclick="zoomSVG(0.75)">Zoom -</button>
+            <button onclick="resetZoomSVG()">Reset</button>
+        </div>
+        <div class="test-container">
+            <img id="imagen-svg" 
+                 src="3_2_12_Mantenimiento_de_Aviación_versión_0_4.svg" 
+                 alt="SVG Original">
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>2️⃣ Modelo 3D (Vista Previa)</h2>
+        <div class="info">
+            ⚠️ Compara con el SVG original. ¿Se ve igual de nítido?<br>
+            Usa los controles para acercarte y rotar.
+        </div>
+        <model-viewer 
+            id="viewer3d"
+            src="3_2_12_Mantenimiento_de_aviacion.glb"
+            camera-controls
+            touch-action="pan-y"
+            disable-zoom="false"
+            max-camera-orbit="auto auto 100%"
+            min-camera-orbit="auto auto 5%"
+            camera-orbit="0deg 75deg 105%"
+            field-of-view="30deg"
+            exposure="2.0"
+            shadow-intensity="0"
+            alt="Modelo 3D">
+        </model-viewer>
+        <div style="text-align: center; margin-top: 10px;">
+            <button onclick="acercarModelo()">🔍 Acercar Mucho</button>
+            <button onclick="resetModelo()">↺ Reset</button>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>3️⃣ Análisis</h2>
+        <div id="analisis" style="padding: 15px; background: #f0f0f0; border-radius: 8px;">
+            Cargando análisis...
+        </div>
+    </div>
+    
+    <script>
+        const viewer = document.getElementById('viewer3d');
+        const stats = document.getElementById('stats');
+        const analisis = document.getElementById('analisis');
+        const imagenSVG = document.getElementById('imagen-svg');
+        
+        let svgScale = 1;
+        
+        // Zoom SVG
+        function zoomSVG(factor) {
+            svgScale *= factor;
+            imagenSVG.style.transform = `scale(${svgScale})`;
+            imagenSVG.style.transformOrigin = 'top left';
+        }
+        
+        function resetZoomSVG() {
+            svgScale = 1;
+            imagenSVG.style.transform = 'scale(1)';
+        }
+        
+        // Controles modelo 3D
+        function acercarModelo() {
+            viewer.cameraOrbit = '0deg 75deg 30%';
+            viewer.fieldOfView = '20deg';
+        }
+        
+        function resetModelo() {
+            viewer.cameraOrbit = '0deg 75deg 105%';
+            viewer.fieldOfView = '30deg';
+        }
+        
+        // Obtener info del modelo
+        viewer.addEventListener('load', async () => {
+            const model = viewer.model;
+            
+            // Obtener estadísticas del archivo
+            const response = await fetch('3_2_12_Mantenimiento_de_aviacion.glb');
+            const blob = await response.blob();
+            const sizeMB = (blob.size / (1024 * 1024)).toFixed(2);
+            
+            // Obtener dimensiones
+            const bbox = model.boundingBox;
+            const size = {
+                x: (bbox.max[0] - bbox.min[0]).toFixed(2),
+                y: (bbox.max[1] - bbox.min[1]).toFixed(2),
+                z: (bbox.max[2] - bbox.min[2]).toFixed(2)
+            };
+            
+            stats.innerHTML = `
+                <strong>Información del Modelo:</strong><br>
+                • Tamaño archivo: ${sizeMB} MB<br>
+                • Dimensiones 3D: ${size.x}m × ${size.y}m × ${size.z}m<br>
+                • Materiales: ${model.materials.length}<br>
+            `;
+            
+            // Analizar textura
+            let textureInfo = 'No disponible';
+            if (model.materials.length > 0) {
+                const material = model.materials[0];
+                const pbrMetallicRoughness = material.pbrMetallicRoughness;
+                if (pbrMetallicRoughness && pbrMetallicRoughness.baseColorTexture) {
+                    const texture = pbrMetallicRoughness.baseColorTexture.texture;
+                    const image = texture.source;
+                    if (image) {
+                        textureInfo = `${image.uri || 'embedded'} (embedded)`;
+                    }
+                }
+            }
+            
+            // Análisis de calidad
+            let diagnostico = '';
+            
+            if (sizeMB < 1) {
+                diagnostico += '⚠️ <strong>Archivo pequeño (&lt;1MB):</strong> La resolución de textura probablemente es baja. Regenera con RESOLUCION_SVG = 16000 o mayor.<br><br>';
+            } else if (sizeMB < 2) {
+                diagnostico += '✓ <strong>Tamaño aceptable (1-2MB):</strong> Resolución media. Puedes aumentar a 16000-20000px para mayor nitidez.<br><br>';
+            } else {
+                diagnostico += '✅ <strong>Tamaño bueno (&gt;2MB):</strong> Alta resolución. Si no se ve nítido, el problema es la visualización en AR.<br><br>';
+            }
+            
+            diagnostico += `
+                <strong>📋 Pasos siguientes:</strong><br>
+                1. Compara el SVG original (arriba) con el modelo 3D<br>
+                2. Si el modelo 3D ya se ve borroso aquí, regenera el GLB con mayor resolución<br>
+                3. Si el modelo 3D se ve bien aquí pero borroso en AR, el problema es:<br>
+                   &nbsp;&nbsp;• Distancia (acércate más en AR)<br>
+                   &nbsp;&nbsp;• Iluminación (usa mejor luz)<br>
+                   &nbsp;&nbsp;• Tamaño del modelo (reduce ANCHO_METROS)<br>
+                <br>
+                <strong>🎯 Resolución recomendada:</strong><br>
+                Para texto pequeño: RESOLUCION_SVG = 20000 px<br>
+                Tamaño modelo: ANCHO_METROS = 1.5 m<br>
+            `;
+            
+            analisis.innerHTML = diagnostico;
+        });
+        
+        viewer.addEventListener('error', (e) => {
+            stats.innerHTML = '❌ Error cargando modelo: ' + e.detail.type;
+        });
+    </script>
+</body>
+</html>
